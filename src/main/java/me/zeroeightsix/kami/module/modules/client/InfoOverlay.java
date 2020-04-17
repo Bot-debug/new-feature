@@ -16,8 +16,8 @@ import net.minecraft.util.text.TextFormatting;
 
 import java.util.ArrayList;
 
-import static me.zeroeightsix.kami.command.Command.sendDisableMessage;
 import static me.zeroeightsix.kami.util.ColourTextFormatting.toTextMap;
+import static me.zeroeightsix.kami.util.MessageSendHelper.sendDisableMessage;
 
 /**
  * @author S-B99
@@ -107,6 +107,10 @@ public class InfoOverlay extends Module {
 
     public static int getItems(Item i) {
         return mc.player.inventory.mainInventory.stream().filter(itemStack -> itemStack.getItem() == i).mapToInt(ItemStack::getCount).sum() + mc.player.inventory.offHandInventory.stream().filter(itemStack -> itemStack.getItem() == i).mapToInt(ItemStack::getCount).sum();
+    }
+
+    public static int getArmor(Item i) {
+        return mc.player.inventory.armorInventory.stream().filter(itemStack -> itemStack.getItem() == i).mapToInt(ItemStack::getCount).sum();
     }
 
     private String unitType(SpeedUnit s) {

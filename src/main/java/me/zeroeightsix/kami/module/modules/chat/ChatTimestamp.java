@@ -2,7 +2,6 @@ package me.zeroeightsix.kami.module.modules.chat;
 
 import me.zero.alpine.listener.EventHandler;
 import me.zero.alpine.listener.Listener;
-import me.zeroeightsix.kami.command.Command;
 import me.zeroeightsix.kami.event.events.PacketEvent;
 import me.zeroeightsix.kami.module.Module;
 import me.zeroeightsix.kami.setting.Setting;
@@ -13,6 +12,7 @@ import net.minecraft.network.play.server.SPacketChat;
 import net.minecraft.util.text.TextFormatting;
 
 import static me.zeroeightsix.kami.util.ColourTextFormatting.toTextMap;
+import static me.zeroeightsix.kami.util.MessageSendHelper.sendRawChatMessage;
 
 /**
  * @author S-B99
@@ -33,13 +33,13 @@ public class ChatTimestamp extends Module {
         if (!(event.getPacket() instanceof SPacketChat)) return;
         SPacketChat sPacketChat = (SPacketChat) event.getPacket();
 
-        if (addTime(sPacketChat.getChatComponent().getUnformattedText())) {
+        if (addTime(sPacketChat.getChatComponent().getFormattedText())) {
             event.cancel();
         }
     });
 
     private boolean addTime(String message) {
-        Command.sendRawChatMessage("<" + TimeUtil.getFinalTime(setToText(secondColour.getValue()), setToText(firstColour.getValue()), timeUnitSetting.getValue(), timeTypeSetting.getValue(), doLocale.getValue()) + TextFormatting.RESET + "> " + message);
+        sendRawChatMessage("<" + TimeUtil.getFinalTime(setToText(secondColour.getValue()), setToText(firstColour.getValue()), timeUnitSetting.getValue(), timeTypeSetting.getValue(), doLocale.getValue()) + TextFormatting.RESET + "> " + message);
         return true;
     }
 

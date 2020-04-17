@@ -1,6 +1,5 @@
 package me.zeroeightsix.kami.module.modules.misc;
 
-import me.zeroeightsix.kami.command.Command;
 import me.zeroeightsix.kami.module.Module;
 import me.zeroeightsix.kami.setting.Setting;
 import me.zeroeightsix.kami.setting.Settings;
@@ -14,6 +13,9 @@ import net.minecraft.item.ItemNameTag;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 
+import static me.zeroeightsix.kami.util.MessageSendHelper.sendChatMessage;
+import static me.zeroeightsix.kami.util.MessageSendHelper.sendErrorMessage;
+
 /**
  * @author S-B99
  * Created by S-B99 on this commit: 83387d6c2243c2a70dc864c9fbef96a77b9a9735
@@ -21,14 +23,15 @@ import net.minecraft.util.EnumHand;
  */
 @Module.Info(name = "AutoNametag", description = "Automatically nametags entities", category = Module.Category.MISC)
 public class AutoNametag extends Module {
-    private Setting<Mode> modeSetting = register(Settings.e("Mode", Mode.WITHER));
+    private Setting<Mode> modeSetting = register(Settings.e("Mode", Mode.ANY));
     private Setting<Float> range = register(Settings.floatBuilder("Range").withMinimum(2.0f).withValue(3.5f).withMaximum(10.0f).build());
-    private Setting<Boolean> autoSlot = register(Settings.b("Auto Slot", true));
     private Setting<Boolean> debug = register(Settings.b("Debug", false));
 
     private String currentName = "";
+    private int currentSlot = -1;
 
     public void onUpdate() {
+        findNameTags();
         useNameTag();
     }
 
@@ -38,49 +41,55 @@ public class AutoNametag extends Module {
             switch (modeSetting.getValue()) {
                 case WITHER:
                     if (w instanceof EntityWither && !w.getDisplayName().getUnformattedText().equals(currentName)) {
-                        final EntityWither wither = (EntityWither) w;
-                        if (mc.player.getDistance(wither) <= range.getValue()) {
-                            if (debug.getValue())
-                                Command.sendChatMessage("Found unnamed Wither");
-                            selectNameTags();
-                            mc.playerController.interactWithEntity(mc.player, wither, EnumHand.MAIN_HAND);
-                        }
-                    }
-                    return;
-                case ANY:
-                    if (w instanceof EntityMob || w instanceof EntityAnimal && !w.getDisplayName().getUnformattedText().equals(currentName)) {
                         if (mc.player.getDistance(w) <= range.getValue()) {
                             if (debug.getValue())
-                                Command.sendChatMessage("Found unnamed " + w.getDisplayName().getUnformattedText());
+                                sendChatMessage("Found unnamed " + w.getDisplayName().getUnformattedText());
                             selectNameTags();
                             mc.playerController.interactWithEntity(mc.player, w, EnumHand.MAIN_HAND);
                         }
                     }
+                    break;
+                case ANY:
+                    if ((w instanceof EntityMob || w instanceof EntityAnimal) && !w.getDisplayName().getUnformattedText().equals(currentName)) {
+                        if (mc.player.getDistance(w) <= range.getValue()) {
+                            if (debug.getValue())
+                                sendChatMessage("Found unnamed " + w.getDisplayName().getUnformattedText());
+                            selectNameTags();
+                            mc.playerController.interactWithEntity(mc.player, w, EnumHand.MAIN_HAND);
+                        }
+                    }
+                    break;
             }
         }
-        if (autoSlot.getValue()) mc.player.inventory.currentItem = originalSlot;
+        mc.player.inventory.currentItem = originalSlot;
     }
 
     private void selectNameTags() {
-        if (!autoSlot.getValue()) return;
-        int tagSlot = -1;
-        for (int i = 0; i < 9; i++) {
-            ItemStack stack = mc.player.inventory.getStackInSlot(i);
-            if (stack == ItemStack.EMPTY || stack.getItem() instanceof ItemBlock) continue;
-            Item tag = stack.getItem();
-            if (tag instanceof ItemNameTag) {
-                tagSlot = i;
-                currentName = stack.getDisplayName();
-            }
-        }
-
-        if (tagSlot == -1) {
-            if (debug.getValue()) Command.sendErrorMessage(getChatName() + "Error: No nametags in hotbar");
+        if (currentSlot == -1 || !isNametag(currentSlot)) {
+            sendErrorMessage(getChatName() + "Error: No nametags in hotbar");
             disable();
             return;
         }
 
-        mc.player.inventory.currentItem = tagSlot;
+        mc.player.inventory.currentItem = currentSlot;
+    }
+
+    private void findNameTags() {
+        for (int i = 0; i < 9; i++) {
+            ItemStack stack = mc.player.inventory.getStackInSlot(i);
+            if (stack == ItemStack.EMPTY || stack.getItem() instanceof ItemBlock) continue;
+            if (isNametag(i)) {
+                currentName = stack.getDisplayName();
+                currentSlot = i;
+            }
+        }
+    }
+
+    /* In case they run out of nametags, check again */
+    private boolean isNametag(int i) {
+        ItemStack stack = mc.player.inventory.getStackInSlot(i);
+        Item tag = stack.getItem();
+        return tag instanceof ItemNameTag && !stack.getDisplayName().equals("Name Tag");
     }
 
     private enum Mode { WITHER, ANY }

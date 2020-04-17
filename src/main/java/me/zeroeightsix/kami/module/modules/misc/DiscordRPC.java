@@ -2,20 +2,20 @@ package me.zeroeightsix.kami.module.modules.misc;
 
 import me.zeroeightsix.kami.DiscordPresence;
 import me.zeroeightsix.kami.KamiMod;
-import me.zeroeightsix.kami.command.Command;
 import me.zeroeightsix.kami.module.Module;
 import me.zeroeightsix.kami.setting.Setting;
 import me.zeroeightsix.kami.setting.Settings;
 
 import static me.zeroeightsix.kami.util.InfoCalculator.playerDimension;
+import static me.zeroeightsix.kami.util.MessageSendHelper.sendWarningMessage;
 
 /**
  * @author S-B99
  * Updated by S-B99 on 13/01/20
  * Updated (slightly) by Dewy on 3rd April 2020
  */
-@Module.Info(name = "DiscordSettings", category = Module.Category.MISC, description = "Discord Rich Presence")
-public class DiscordSettings extends Module {
+@Module.Info(name = "DiscordRPC", category = Module.Category.MISC, description = "Discord Rich Presence")
+public class DiscordRPC extends Module {
     private Setting<Boolean> coordsConfirm = register(Settings.b("Coords Confirm", false));
     public Setting<LineInfo> line1Setting = register(Settings.e("Line 1 Left", LineInfo.VERSION)); // details left
     public Setting<LineInfo> line3Setting = register(Settings.e("Line 1 Right", LineInfo.USERNAME)); // details right
@@ -64,7 +64,7 @@ public class DiscordSettings extends Module {
         if (startTime + 10000 <= System.currentTimeMillis()) { // 10 seconds in milliseconds
             if (line1Setting.getValue().equals(LineInfo.COORDS) || line2Setting.getValue().equals(LineInfo.COORDS) || line3Setting.getValue().equals(LineInfo.COORDS) || line4Setting.getValue().equals(LineInfo.COORDS)) {
                 if (!coordsConfirm.getValue() && mc.player != null) {
-                    Command.sendWarningMessage(getChatName() + " Warning: In order to use the coords option please enable the coords confirmation option. This will display your coords on the discord rpc. Do NOT use this if you do not want your coords displayed");
+                    sendWarningMessage(getChatName() + " Warning: In order to use the coords option please enable the coords confirmation option. This will display your coords on the discord rpc. Do NOT use this if you do not want your coords displayed");
                 }
             }
             startTime = System.currentTimeMillis();
